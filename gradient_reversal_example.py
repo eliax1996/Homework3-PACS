@@ -75,8 +75,11 @@ class DANN(nn.Module):
 
     def forward(self, x, alpha=None):
         x = self.features(x)
-        #x = self.avgpool(x)
+        x = self.avgpool(x)
         features = torch.flatten(x, 1)
+        
+        x = self.class_classifier(x)
+        return x
 
         classified = -1
 
