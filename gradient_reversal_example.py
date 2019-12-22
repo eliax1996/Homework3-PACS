@@ -1,11 +1,15 @@
+import torch
 import torch.nn as nn
 from torch.autograd import Function
+from .utils import load_state_dict_from_url
 
-''' 
-Very easy template to start for developing your AlexNet with DANN 
-Has not been tested, might contain incompatibilities with most recent versions of PyTorch (you should address this)
-However, the logic is consistent
-'''
+
+__all__ = ['AlexNet', 'alexnet']
+
+
+model_urls = {
+    'alexnet': 'https://download.pytorch.org/models/alexnet-owt-4df8aa71.pth',
+}
 
 
 class ReverseLayerF(Function):
@@ -24,25 +28,80 @@ class ReverseLayerF(Function):
         return output, None
 
 
-class RandomNetworkWithReverseGrad(nn.Module):
-    def __init__(self, **kwargs):
-        super(RandomNetworkWithReverseGrad, self).__init__()
-        self.features = nn.Sequential(...)
-        self.classifier = nn.Sequential(...)
-        self.dann_classifier = nn.Sequential(...)
+class AlexNetDANN(nn.Module):
+
+    def __init__(self, num_classes=7, category_images=4):
+        super(AlexNet, self).__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(64, 192, kernel_size=5, padding=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(192, 384, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(384, 256, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+        )
+        
+        self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
+
+        self.category_classifier = nn.Sequential(
+            nn.Dropout(),
+            nn.Linear(256 * 6 * 6, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            nn.Linear(4096, category_images),
+        )
+
+        self.class_classifier = nn.Sequential(
+            nn.Dropout(),
+            nn.Linear(256 * 6 * 6, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            nn.Linear(4096, num_classes),
+        )
 
     def forward(self, x, alpha=None):
-        features = self.features
-        # Flatten the features:
-        features = features.view(features.size(0), -1)
+        x = self.features(x)
+        x = self.avgpool(x)
+        features = torch.flatten(x, 1)
+
+        classified = -1
+
         # If we pass alpha, we can assume we are training the discriminator
         if alpha is not None:
             # gradient reversal layer (backward gradients will be reversed)
             reverse_feature = ReverseLayerF.apply(features, alpha)
-            discriminator_output = ...
-            return discriminator_output
-        # If we don't pass alpha, we assume we are training with supervision
+            cat_image = self.category_classifier(x)
+            classified = cat_image
         else:
-            # do something else
-            class_outputs = ...
-            return class_outputs
+            class_image = self.class_classifier(x)
+            classified = class_image
+
+        return classified
+
+
+def alexnet(pretrained=False, progress=True, **kwargs):
+    r"""AlexNet model architecture from the
+    `"One weird trick..." <https://arxiv.org/abs/1404.5997>`_ paper.
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    model = AlexNet(**kwargs)
+    if pretrained:
+        state_dict = load_state_dict_from_url(model_urls['alexnet'],
+                                              progress=progress)
+        model.load_state_dict(state_dict,strict=False)
+
+    return model
