@@ -31,7 +31,7 @@ class ReverseLayerF(Function):
         return output, None
 
 
-class AlexNetDANN(nn.Module):
+class DANN(nn.Module):
 
     def __init__(self, num_classes=7, category_images=2):
         super(AlexNet, self).__init__()
@@ -93,7 +93,7 @@ class AlexNetDANN(nn.Module):
         return classified
 
 
-def alexnet(pretrained=False, progress=True, **kwargs):
+def AlexNetDANN(pretrained=False, progress=True, **kwargs):
     r"""AlexNet model architecture from the
     `"One weird trick..." <https://arxiv.org/abs/1404.5997>`_ paper.
 
@@ -101,7 +101,7 @@ def alexnet(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    model = AlexNet(**kwargs)
+    model = DANN(**kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['alexnet'],
                                               progress=progress)
