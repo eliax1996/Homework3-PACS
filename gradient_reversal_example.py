@@ -53,7 +53,7 @@ class DANN(nn.Module):
         
         self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
 
-        self.category_classifier = nn.Sequential(
+        self.classifier = nn.Sequential(
             nn.Dropout(),
             nn.Linear(256 * 6 * 6, 4096),
             nn.ReLU(inplace=True),
@@ -73,6 +73,12 @@ class DANN(nn.Module):
             nn.Linear(4096, num_classes),
         )
 
+    def update_weigth(self):
+        self.class_classifier[1].weight.data = self.classiﬁer[1].weight.data
+        self.class_classifier[1].bias.data = self.classiﬁer[1].bias.data
+        self.class_classifier[4].weight.data = self.classiﬁer[4].weight.data
+        self.class_classifier[4].bias.data = self.classiﬁer[4].bias.data
+
     def forward(self, x, alpha=None):
         x = self.features(x)
         x = self.avgpool(x)
@@ -87,7 +93,7 @@ class DANN(nn.Module):
             class_image = self.class_classifier(features)
             classified = class_image
         else:
-            cat_image = self.category_classifier(features)
+            cat_image = self.classifier(features)
             classified = cat_image
 
         return classified
@@ -105,6 +111,11 @@ def AlexNetDANN(pretrained=False, progress=True, **kwargs):
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['alexnet'],
                                               progress=progress)
+        
+        # removing unused params
+        state_dict.popitem("classifier.6.bias")
+        state_dict.popitem("classifier.6.weight") 
         model.load_state_dict(state_dict,strict=False)
+        model.update_weigth()
 
     return model
