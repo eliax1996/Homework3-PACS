@@ -77,9 +77,6 @@ class DANN(nn.Module):
         x = self.features(x)
         x = self.avgpool(x)
         features = torch.flatten(x, 1)
-        
-        x = self.class_classifier(x)
-        return x
 
         classified = -1
 
@@ -87,11 +84,11 @@ class DANN(nn.Module):
         if alpha is not None:
             # gradient reversal layer (backward gradients will be reversed)
             reverse_feature = ReverseLayerF.apply(features, alpha)
-            cat_image = self.category_classifier(x)
-            classified = cat_image
-        else:
-            class_image = self.class_classifier(x)
+            class_image = self.class_classifier(features)
             classified = class_image
+        else:
+            cat_image = self.category_classifier(features)
+            classified = cat_image
 
         return classified
 
