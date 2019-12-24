@@ -116,6 +116,6 @@ def AlexNetDANN(pretrained=False, progress=True, **kwargs):
         state_dict.popitem("classifier.6.bias")
         state_dict.popitem("classifier.6.weight") 
         model.load_state_dict(state_dict,strict=False)
-        #model.update_weigth()
+        model.update_weigth()
 
     return model
