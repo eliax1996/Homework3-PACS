@@ -34,7 +34,7 @@ class ReverseLayerF(Function):
 
 class DANN(nn.Module):
 
-    def __init__(self, num_classes=7, category_images=2):
+    def __init__(self, num_category=7, test_or_train=2):
         super(DANN, self).__init__()
         self.features = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
@@ -61,24 +61,24 @@ class DANN(nn.Module):
             nn.Dropout(),
             nn.Linear(4096, 4096),
             nn.ReLU(inplace=True),
-            nn.Linear(4096, category_images),
+            nn.Linear(4096, num_category),
         )
 
-        self.class_classifier = nn.Sequential(
+        self.domain_classifier = nn.Sequential(
             nn.Dropout(),
             nn.Linear(256 * 6 * 6, 4096),
             nn.ReLU(inplace=True),
             nn.Dropout(),
             nn.Linear(4096, 4096),
             nn.ReLU(inplace=True),
-            nn.Linear(4096, num_classes),
+            nn.Linear(4096, test_or_train),
         )
 
     def update_weigth(self):
-        self.class_classifier[1].weight.data =  copy.deepcopy(self.classiﬁer[1].weight.data)
-        self.class_classifier[1].bias.data = copy.deepcopy(self.classiﬁer[1].bias.data)
-        self.class_classifier[4].weight.data = copy.deepcopy(self.classiﬁer[4].weight.data)
-        self.class_classifier[4].bias.data = copy.deepcopy(self.classiﬁer[4].bias.data)
+        self.domain_classifier[1].weight.data =  copy.deepcopy(self.classiﬁer[1].weight.data)
+        self.domain_classifier[1].bias.data = copy.deepcopy(self.classiﬁer[1].bias.data)
+        self.domain_classifier[4].weight.data = copy.deepcopy(self.classiﬁer[4].weight.data)
+        self.domain_classifier[4].bias.data = copy.deepcopy(self.classiﬁer[4].bias.data)
 
     def forward(self, x, alpha=None):
         x = self.features(x)
@@ -91,12 +91,11 @@ class DANN(nn.Module):
         if alpha is not None:
             # gradient reversal layer (backward gradients will be reversed)
             reverse_feature = ReverseLayerF.apply(features, alpha)
-            cat_image = self.classifier(reverse_feature)
-            classified = cat_image
-            print("reverse feature classified")
+            domain_image = self.domain_classifier(reverse_feature)
+            classified = domain_image
         else:
-            class_image = self.class_classifier(features)
-            classified = class_image
+            category_image = self.classifier(features)
+            classified = category_image
 
         return classified
 
