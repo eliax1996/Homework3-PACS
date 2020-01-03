@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import copy
 from torch.autograd import Function
 try:
     from torch.hub import load_state_dict_from_url
@@ -74,10 +75,10 @@ class DANN(nn.Module):
         )
 
     def update_weigth(self):
-        self.class_classifier[1].weight.data = self.classiﬁer[1].weight.data
-        self.class_classifier[1].bias.data = self.classiﬁer[1].bias.data
-        self.class_classifier[4].weight.data = self.classiﬁer[4].weight.data
-        self.class_classifier[4].bias.data = self.classiﬁer[4].bias.data
+        self.class_classifier[1].weight.data =  copy.deepcopy(self.classiﬁer[1].weight.data)
+        self.class_classifier[1].bias.data = copy.deepcopy(self.classiﬁer[1].bias.data)
+        self.class_classifier[4].weight.data = copy.deepcopy(self.classiﬁer[4].weight.data)
+        self.class_classifier[4].bias.data = copy.deepcopy(self.classiﬁer[4].bias.data)
 
     def forward(self, x, alpha=None):
         x = self.features(x)
@@ -92,6 +93,7 @@ class DANN(nn.Module):
             reverse_feature = ReverseLayerF.apply(features, alpha)
             cat_image = self.classifier(reverse_feature)
             classified = cat_image
+            print("reverse feature classified")
         else:
             class_image = self.class_classifier(features)
             classified = class_image
