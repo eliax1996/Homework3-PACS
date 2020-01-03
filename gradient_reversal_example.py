@@ -90,7 +90,7 @@ class DANN(nn.Module):
         if alpha is not None:
             # gradient reversal layer (backward gradients will be reversed)
             reverse_feature = ReverseLayerF.apply(features, alpha)
-            cat_image = self.classifier(features)
+            cat_image = self.classifier(reverse_feature)
             classified = cat_image
         else:
             class_image = self.class_classifier(features)
