@@ -28,6 +28,7 @@ class ReverseLayerF(Function):
     @staticmethod
     def backward(ctx, grad_output):
         output = grad_output.neg() * ctx.alpha
+        print(output)
 
         return output, None
 
@@ -92,7 +93,6 @@ class DANN(nn.Module):
             # gradient reversal layer (backward gradients will be reversed)
             reverse_feature = ReverseLayerF.apply(features, alpha)
             domain_image = self.domain_classifier(reverse_feature)
-            print(domain_image)
             classified = domain_image
         else:
             category_image = self.classifier(features)
