@@ -27,10 +27,8 @@ class ReverseLayerF(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        output = grad_output * ctx.alpha
-        print(output)
-
-        return output, None
+        output = grad_output.neg() * ctx.alpha
+        return output
 
 
 class DANN(nn.Module):
