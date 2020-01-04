@@ -18,10 +18,12 @@ model_urls = {
 class GradientReverse(Function):
     def __init__(self, alpha):
         self.alpha = alpha
-
+        
+    @staticmethod
     def forward(self, x):
         return x.view_as(x)
 
+    @staticmethod
     def backward(self, grad_output):
         return (grad_output.neg() * self.alpha)
 
