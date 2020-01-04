@@ -92,6 +92,7 @@ class DANN(nn.Module):
             # gradient reversal layer (backward gradients will be reversed)
             reverse_feature = ReverseLayerF.apply(features, alpha)
             domain_image = self.domain_classifier(reverse_feature)
+            print(domain_image)
             classified = domain_image
         else:
             category_image = self.classifier(features)
