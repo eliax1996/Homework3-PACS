@@ -85,7 +85,7 @@ class DANN(nn.Module):
         # If we pass alpha, we can assume we are training the discriminator
         if alpha is not None:
             # gradient reversal layer (backward gradients will be reversed)
-            reverse_feature = GradientReverse(features,alpha)
+            reverse_feature = GradientReverse.apply(features,alpha)
             domain_image = self.domain_classifier(reverse_feature)
             classified = domain_image
         else:
