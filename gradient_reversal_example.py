@@ -16,16 +16,15 @@ model_urls = {
 }
 
 class GradientReverse(Function):
-    def __init__(self, alpha):
-        self.alpha = alpha
-        
     @staticmethod
-    def forward(self, x):
+    def forward(ctx, x, alpha):
+        ctx.alpha = alpha
+        
         return x.view_as(x)
 
     @staticmethod
-    def backward(self, grad_output):
-        return (grad_output.neg() * self.alpha)
+    def backward(ctx, grad_output):
+        return (grad_output.neg() * ctx.alpha)
 
 class DANN(nn.Module):
 
@@ -85,7 +84,7 @@ class DANN(nn.Module):
         # If we pass alpha, we can assume we are training the discriminator
         if alpha is not None:
             # gradient reversal layer (backward gradients will be reversed)
-            reverse_feature = GradientReverse(alpha)(features)
+            reverse_feature = GradientReverse(features,alpha)
             domain_image = self.domain_classifier(reverse_feature)
             classified = domain_image
         else:
