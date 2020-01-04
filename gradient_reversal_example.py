@@ -15,21 +15,15 @@ model_urls = {
     'alexnet': 'https://download.pytorch.org/models/alexnet-owt-4df8aa71.pth',
 }
 
+class GradientReverse(Function):
+    def __init__(self, lambd):
+        self.alpha = alpha
 
-class ReverseLayerF(Function):
-    # Forwards identity
-    # Sends backward reversed gradients
-    @staticmethod
-    def forward(ctx, x, alpha):
-        ctx.alpha = alpha
-
+    def forward(self, x):
         return x.view_as(x)
 
-    @staticmethod
-    def backward(ctx, grad_output):
-        output = grad_output.neg() * ctx.alpha
-        return output,None
-
+    def backward(self, grad_output):
+        return (grad_output.neg() * self.alpha)
 
 class DANN(nn.Module):
 
@@ -89,7 +83,7 @@ class DANN(nn.Module):
         # If we pass alpha, we can assume we are training the discriminator
         if alpha is not None:
             # gradient reversal layer (backward gradients will be reversed)
-            reverse_feature = ReverseLayerF.apply(features, alpha)
+            reverse_feature = GradientReverse(alpha)(features)
             domain_image = self.domain_classifier(reverse_feature)
             classified = domain_image
         else:
