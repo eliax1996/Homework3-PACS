@@ -24,7 +24,8 @@ class GradientReverse(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        return (grad_output.neg() * ctx.alpha)
+        out = grad_output.neg() * ctx.alpha
+        return out,None
 
 class DANN(nn.Module):
 
