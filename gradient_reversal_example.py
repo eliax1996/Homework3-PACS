@@ -16,7 +16,7 @@ model_urls = {
 }
 
 class GradientReverse(Function):
-    def __init__(self, lambd):
+    def __init__(self, alpha):
         self.alpha = alpha
 
     def forward(self, x):
